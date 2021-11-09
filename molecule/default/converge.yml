@@ -5,6 +5,7 @@
   roles:
     - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
       vars:
+        sftp_enable_logging: true
         sftp_directories:
           - test1
           - test2

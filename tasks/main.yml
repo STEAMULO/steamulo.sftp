@@ -3,6 +3,7 @@
   file:
     path: "{{ sftp_home_partition }}"
     state: directory
+    mode: u=rwxr,g=xr,o=x
 
 - name: "Compute SFTP users."
   set_fact:
@@ -148,6 +149,7 @@
     path: "{{ item.home }}/dev"
     owner: root
     group: root
+    mode: u=rwxr,g=xr,o=x
     state: directory
   with_items:
     - "{{ _sftp_users }}"
@@ -156,6 +158,7 @@
 - name: SFTP-Server | Enable Logging
   copy:
     dest: "/etc/rsyslog.d/sftp.conf"
+    mode: u=rw,g=r,o=r
     content: |
       # Create an additional socket for some of the sshd chrooted users.
       {% for user in sftp_users %}
@@ -172,6 +175,7 @@
 - name: SFTP-Server | Enable Log rotation
   copy:
     dest: "/etc/logrotate.d/sftp"
+    mode: u=rw,g=r,o=r
     content: |
       /var/log/sftp.log
       {
