@@ -1,8 +1,10 @@
 ---
+
 - name: SFTP-Server | Create sftp home partition
   file:
     path: "{{ sftp_home_partition }}"
     state: directory
+    mode: u=rwxr,g=xr,o=x
 
 - name: "Compute SFTP users."
   set_fact:
@@ -95,7 +97,7 @@
     path: "{{ item.home }}"
     owner: root
     group: "{{ item.group | default(sftp_group_name) }}"
-    mode: "{{ item.mode | default(0750) }}"
+    mode: "{{ item.mode | default('0750') }}"
   with_items: "{{ _sftp_users }}"
 
 # Install all relevant public keys.
@@ -123,7 +125,7 @@
     path: "{{ item[0].home }}/{{ item[1].name | default(item[1]) }}"
     owner: "{{ item[0].name }}"
     group: "{{ item[0].group | default(item[0].name) }}"
-    mode: "{{ item[1].mode | default(0750) }}"
+    mode: "{{ item[1].mode | default('0750') }}"
     state: directory
   with_nested:
     - "{{ _sftp_users }}"
@@ -135,7 +137,7 @@
     path: "{{ item[0].home }}/{{ item[1].name | default(item[1]) }}"
     owner: "{{ item[0].name }}"
     group: "{{ item[0].group | default(item[0].name) }}"
-    mode: "{{ item[1].mode | default(0750) }}"
+    mode: "{{ item[1].mode | default('0750') }}"
     state: directory
   with_subelements:
     - "{{ _sftp_users }}"
@@ -148,6 +150,7 @@
     path: "{{ item.home }}/dev"
     owner: root
     group: root
+    mode: u=rwxr,g=xr,o=x
     state: directory
   with_items:
     - "{{ _sftp_users }}"
@@ -156,6 +159,7 @@
 - name: SFTP-Server | Enable Logging
   copy:
     dest: "/etc/rsyslog.d/sftp.conf"
+    mode: u=rw,g=r,o=r
     content: |
       # Create an additional socket for some of the sshd chrooted users.
       {% for user in sftp_users %}
@@ -168,10 +172,10 @@
   when: sftp_enable_logging
   notify: SFTP-Server | Restart rsyslog
 
-
 - name: SFTP-Server | Enable Log rotation
   copy:
     dest: "/etc/logrotate.d/sftp"
+    mode: u=rw,g=r,o=r
     content: |
       /var/log/sftp.log
       {
@@ -187,10 +191,3 @@
         endscript
       }
   when: sftp_enable_logging
-
-# Restart sshd to ensure all configuration has been applied. This should always be the last task.
-- name: SFTP-Server | Restart sshd
-  service:
-    name: "{{ 'ssh' if ansible_os_family == 'Debian' else 'sshd' }}"
-    state: restarted
-  ignore_errors: Yes
