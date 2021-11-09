@@ -1,4 +1,5 @@
 ---
+
 - name: SFTP-Server | Create sftp home partition
   file:
     path: "{{ sftp_home_partition }}"
@@ -171,7 +172,6 @@
   when: sftp_enable_logging
   notify: SFTP-Server | Restart rsyslog
 
-
 - name: SFTP-Server | Enable Log rotation
   copy:
     dest: "/etc/logrotate.d/sftp"
@@ -191,10 +191,3 @@
         endscript
       }
   when: sftp_enable_logging
-
-# Restart sshd to ensure all configuration has been applied. This should always be the last task.
-- name: SFTP-Server | Restart sshd
-  service:
-    name: "{{ 'ssh' if ansible_os_family == 'Debian' else 'sshd' }}"
-    state: restarted
-  ignore_errors: Yes
